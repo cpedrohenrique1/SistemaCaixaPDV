@@ -12,7 +12,7 @@ public class Main {
 	public static void main(String[] args) throws SQLException {
 		DatabaseConnection cx = new DatabaseConnection();
 		Connection conn = null;
-		conn = cx.getConnection();
+		conn = cx.firstConnection();
 		if (conn == null) {
 			System.out.println("Erro");
 		} else {
@@ -21,7 +21,7 @@ public class Main {
 			stmt.executeUpdate("USE pdv_supermercado;");
 			stmt.executeUpdate(
 	                "CREATE TABLE IF NOT EXISTS Funcionarios (" +
-	                "    pkFuncionario INT AUTO_INCREMENT PRIMARY KEY," +
+	                "    pkFuncionario VARCHAR(36) DEFAULT(UUID()) PRIMARY KEY," +
 	                "    nomeCompleto VARCHAR(150) NOT NULL," +
 	                "    nomeUsuario VARCHAR(50) NOT NULL UNIQUE," +
 	                "    senha VARCHAR(64) NOT NULL," +
@@ -32,7 +32,7 @@ public class Main {
 	            System.out.println("Criando tabela Produtos...");
 	            stmt.executeUpdate(
 	                "CREATE TABLE IF NOT EXISTS Produtos (" +
-	                "    pkProduto INT AUTO_INCREMENT PRIMARY KEY," +
+	                "    pkProduto VARCHAR(36) DEFAULT(UUID()) PRIMARY KEY," +
 	                "    codigo VARCHAR(50) NOT NULL UNIQUE," +
 	                "    nome VARCHAR(100) NOT NULL," +
 	                "    preco DECIMAL(10,2) NOT NULL" +
@@ -42,11 +42,11 @@ public class Main {
 	            System.out.println("Criando tabela Vendas...");
 	            stmt.executeUpdate(
 	                "CREATE TABLE IF NOT EXISTS Vendas (" +
-	                "    pkVenda INT AUTO_INCREMENT PRIMARY KEY," +
-	                "    dataVenda DATETIME NOT NULL," +
+	                "    pkVenda VARCHAR(36) DEFAULT(UUID()) PRIMARY KEY," +
+	                "    dataVenda DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP," +
 	                "    total DECIMAL(10,2) NOT NULL," +
 	                "    metodoPagamento VARCHAR(30) NOT NULL," +
-	                "    fkFuncionario INT NOT NULL," +
+	                "    fkFuncionario VARCHAR(36) NOT NULL," +
 	                "    FOREIGN KEY (fkFuncionario) REFERENCES Funcionarios(pkFuncionario)" +
 	                ");"
 	            );
@@ -54,11 +54,11 @@ public class Main {
 	            System.out.println("Criando tabela ItemVenda...");
 	            stmt.executeUpdate(
 	                "CREATE TABLE IF NOT EXISTS ItemVenda (" +
-	                "    pkItemVenda INT AUTO_INCREMENT PRIMARY KEY," +
+	                "    pkItemVenda VARCHAR(36) DEFAULT(UUID()) PRIMARY KEY," +
 	                "    quantidade INT NOT NULL," +
 	                "    precoUnitario DECIMAL(10,2) NOT NULL," +
-	                "    fkVenda INT NOT NULL," +
-	                "    fkProduto INT NOT NULL," +
+	                "    fkVenda VARCHAR(36) NOT NULL," +
+	                "    fkProduto VARCHAR(36) NOT NULL," +
 	                "    FOREIGN KEY (fkVenda) REFERENCES Vendas(pkVenda)," +
 	                "    FOREIGN KEY (fkProduto) REFERENCES Produtos(pkProduto)" +
 	                ");"
@@ -72,7 +72,9 @@ public class Main {
 	            String sqlAdmin = "INSERT IGNORE INTO Funcionarios (nomeCompleto, nomeUsuario, senha, perfil) " +
 	                              "VALUES ('Administrador do Sistema', 'admin', '" + hashSenhaAdmin + "', 'GERENTE');";
 	            stmt.executeUpdate(sqlAdmin);
-
+	            String sqlFuncionario = "INSERT IGNORE INTO Funcionarios (nomeCompleto, nomeUsuario, senha, perfil) " +
+                        "VALUES ('Caixa', 'caixa', '" + hashSenhaAdmin + "', 'CAIXA');";
+	            stmt.executeUpdate(sqlFuncionario);
 	            System.out.println("Inserindo alguns produtos de teste...");
 	            stmt.executeUpdate("INSERT IGNORE INTO Produtos (codigo, nome, preco) VALUES ('78910001', 'Arroz 5kg', 24.90);");
 	            stmt.executeUpdate("INSERT IGNORE INTO Produtos (codigo, nome, preco) VALUES ('78910002', 'Feijão Carioca 1kg', 7.50);");
