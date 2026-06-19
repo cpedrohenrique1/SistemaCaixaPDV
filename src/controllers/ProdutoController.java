@@ -1,24 +1,38 @@
 package controllers;
 
+import java.math.BigDecimal;
 import java.util.List;
+import java.util.UUID;
 
 import dtos.ProdutoExibicaoDTO;
 import models.Produto;
 import services.ProdutoService;
 
 public class ProdutoController {
-	private final ProdutoService service = new ProdutoService();
+    private final ProdutoService service = new ProdutoService();
 
     public ProdutoExibicaoDTO pesquisarProdutoCarrinho(String codigo) throws Exception {
         return service.consultarPorCodigo(codigo);
     }
 
     public void registrarProduto(String codigo, String nome, double preco) throws Exception {
-        Produto p = new Produto(0, codigo, nome, preco);
-        service.cadastrarNovoProduto(p);
+        service.cadastrarNovoProduto(codigo, nome, BigDecimal.valueOf(preco));
+    }
+
+    public void atualizarProduto(UUID pkProduto, String codigo, String nome, double preco) throws Exception {
+        Produto produto = new Produto(pkProduto, codigo, nome, BigDecimal.valueOf(preco));
+        service.atualizarProduto(produto);
     }
 
     public List<Produto> listarCatalogoCompleto() throws Exception {
-        return service.obterCatalogo();
+        return service.listarProdutos();
+    }
+
+    public Produto buscarProdutoPorId(UUID pkProduto) throws Exception {
+        return service.buscarPorId(pkProduto);
+    }
+
+    public Produto pesquisarProdutoPorCodigo(String codigo) throws Exception {
+        return service.buscarEntidadePorCodigo(codigo);
     }
 }
