@@ -1,46 +1,36 @@
 package repositories;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.List;
+import java.util.UUID;
 
+import daos.FuncionarioDAO;
 import models.Funcionario;
-import utils.DatabaseConnection;
 
 public class FuncionarioRepository {
-    DatabaseConnection conexaoBanco = new DatabaseConnection();
+    private final FuncionarioDAO dao = new FuncionarioDAO();
 
     public Funcionario buscarPorUsuario(String nomeUsuario) throws SQLException {
-        String sql = "SELECT * FROM Funcionarios WHERE nomeUsuario = ?";
-        try (Connection conn = conexaoBanco.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(sql)) {
+        return dao.buscarPorUsuario(nomeUsuario);
+    }
 
-            stmt.setString(1, nomeUsuario);
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return new Funcionario(
-                            rs.getInt("pkFuncionario"),
-                            rs.getString("nomeCompleto"),
-                            rs.getString("nomeUsuario"),
-                            rs.getString("senha"),
-                            rs.getString("perfil"));
-                }
-            }
-        }
-        return null;
+    public Funcionario buscarPorId(UUID idFuncionario) throws SQLException {
+        return dao.buscarPorId(idFuncionario);
+    }
+
+    public List<Funcionario> listarTodos() throws SQLException {
+        return dao.listarTodos();
     }
 
     public void salvar(Funcionario funcionario) throws SQLException {
-        String sql = "INSERT INTO Funcionarios (nomeCompleto, nomeUsuario, senha, perfil) VALUES (?, ?, ?, ?)";
-        try (Connection conn = conexaoBanco.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(sql)) {
+        dao.salvar(funcionario);
+    }
 
-            stmt.setString(1, funcionario.nomeCompleto());
-            stmt.setString(2, funcionario.nomeUsuario());
-            stmt.setString(3, funcionario.senha());
-            stmt.setString(4, funcionario.perfil());
-            stmt.executeUpdate();
+    public void atualizar(Funcionario funcionario) throws SQLException {
+        if (funcionario.pkFuncionario() == null) {
+            throw new IllegalArgumentException("O identificador do funcionário é obrigatório para atualização.");
         }
+
+        dao.atualizar(funcionario);
     }
 }
