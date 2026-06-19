@@ -1,7 +1,9 @@
 package models;
 
+import java.util.UUID;
+
 public record Funcionario(
-    int pkFuncionario,
+    UUID pkFuncionario,
     String nomeCompleto,
     String nomeUsuario,
     String senha,
