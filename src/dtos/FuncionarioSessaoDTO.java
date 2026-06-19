@@ -1,4 +1,6 @@
 package dtos;
 
-public record FuncionarioSessaoDTO(int pkFuncionario, String nomeCompleto, String perfil) {
+import java.util.UUID;
+
+public record FuncionarioSessaoDTO(UUID pkFuncionario, String nomeCompleto, String perfil) {
 }

@@ -1,5 +1,7 @@
 package dtos;
 
-public record ProdutoExibicaoDTO(int pkProduto, String codigo, String nome, double precoUnitario) {
+import java.math.BigDecimal;
+import java.util.UUID;
 
+public record ProdutoExibicaoDTO(UUID pkProduto, String codigo, String nome, BigDecimal precoUnitario) {
 }
