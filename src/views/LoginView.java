@@ -22,7 +22,7 @@ public class LoginView extends JFrame {
 
     public LoginView() {
         setTitle("PDV Supermercado - Autenticação");
-        setSize(350, 200);
+        setSize(400, 300);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         initComponents();
@@ -43,7 +43,6 @@ public class LoginView extends JFrame {
         btnEntrar = new JButton("Entrar");
         add(btnEntrar);
 
-        // Disparador de eventos do Swing
         btnEntrar.addActionListener((ActionEvent e) -> executarLogin());
     }
 
@@ -55,13 +54,12 @@ public class LoginView extends JFrame {
             FuncionarioSessaoDTO sessao = controller.processarLogin(usuario, senha);
             JOptionPane.showMessageDialog(this, "Bem-vindo, " + sessao.nomeCompleto());
 
-            // Lógica de Redirecionamento com base no Perfil do DTO
             if (sessao.perfil().equalsIgnoreCase("GERENTE")) {
-                // new GerenteDashboardView().setVisible(true);
+                new GerenteView().setVisible(true);
             } else {
-                // new CaixaView(sessao).setVisible(true);
+                new CaixaView(sessao).setVisible(true);
             }
-            this.dispose(); // Fecha a tela de login
+            this.dispose();
 
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this, ex.getMessage(), "Erro de Acesso", JOptionPane.ERROR_MESSAGE);

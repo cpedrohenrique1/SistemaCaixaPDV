@@ -2,11 +2,15 @@ package views;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Cursor;
+import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
@@ -17,84 +21,203 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
+import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 
 import controllers.ProdutoController;
 import controllers.VendaController;
 import dtos.CarrinhoItemDTO;
+import dtos.FuncionarioSessaoDTO;
 import dtos.ProdutoExibicaoDTO;
 
-public class CaixaView extends JFrame{
-	private JTextField txtCodigo, txtQtd;
+public class CaixaView extends JFrame {
+    private final ProdutoController produtoController = new ProdutoController();
+    private final VendaController vendaController = new VendaController();
+    private final FuncionarioSessaoDTO funcionarioLogado;
+
+    private JTextField txtCodigo;
+    private JTextField txtQtd;
     private JLabel lblTotal;
+    private JLabel lblOperador;
     private JTable tabelaCarrinho;
     private DefaultTableModel modeloTabela;
     private JComboBox<String> cbPagamento;
-    private JButton btnAdicionar, btnFecharVenda;
+    private JButton btnAdicionar;
+    private JButton btnRemover;
+    private JButton btnLimpar;
+    private JButton btnFecharVenda;
 
-    private final ProdutoController produtoController = new ProdutoController();
-    private final VendaController vendaController = new VendaController();
-    
-    // Lista local em memória para armazenar os múltiplos itens comprados antes do fechamento
     private final List<CarrinhoItemDTO> carrinho = new ArrayList<>();
-    private double valorTotalGeral = 0.0;
-    private int idFuncionarioLogado = 1; // Substituir pelo ID vindo da sessão real do Login
+    private BigDecimal totalGeral = BigDecimal.ZERO;
 
-    public CaixaView() {
-        setTitle("PDV Supermercado - Ponto de Venda");
-        setSize(800, 500);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    public CaixaView(FuncionarioSessaoDTO funcionarioLogado) {
+        this.funcionarioLogado = funcionarioLogado;
+
+        setTitle("PDV Supermercado - Caixa");
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setMinimumSize(new Dimension(1100, 720));
         setLocationRelativeTo(null);
+        setExtendedState(JFrame.MAXIMIZED_BOTH);
+
+        try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } catch (Exception ignored) {
+            // Mantém o tema padrão se o tema do sistema não estiver disponível.
+        }
+
         initComponents();
     }
 
     private void initComponents() {
-        setLayout(new BorderLayout(10, 10));
+        JPanel root = new JPanel(new BorderLayout(0, 18));
+        root.setBorder(new EmptyBorder(20, 20, 20, 20));
+        root.setBackground(new Color(244, 247, 251));
 
-        // Painel Superior: Entrada de dados do Produto
-        JPanel painelSuperior = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 10));
-        painelSuperior.add(new JLabel("Cód. Barras:"));
-        txtCodigo = new JTextField(12);
-        painelSuperior.add(txtCodigo);
+        root.add(criarCabecalho(), BorderLayout.NORTH);
+        root.add(criarConteudo(), BorderLayout.CENTER);
+        root.add(criarRodape(), BorderLayout.SOUTH);
 
-        painelSuperior.add(new JLabel("Qtd:"));
+        setContentPane(root);
+    }
+
+    private JPanel criarCabecalho() {
+        JPanel header = new JPanel(new BorderLayout());
+        header.setOpaque(false);
+
+        JLabel titulo = new JLabel("Caixa - Registro de Vendas");
+        titulo.setFont(new Font("SansSerif", Font.BOLD, 30));
+        titulo.setForeground(new Color(18, 30, 52));
+
+        lblOperador = new JLabel("Operador: " + nomeOperador());
+        lblOperador.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        lblOperador.setForeground(new Color(88, 97, 113));
+
+        JPanel texto = new JPanel(new BorderLayout(0, 6));
+        texto.setOpaque(false);
+        texto.add(titulo, BorderLayout.NORTH);
+        texto.add(lblOperador, BorderLayout.SOUTH);
+
+        header.add(texto, BorderLayout.WEST);
+        return header;
+    }
+
+    private JPanel criarConteudo() {
+        JPanel conteudo = new JPanel(new BorderLayout(0, 16));
+        conteudo.setOpaque(false);
+        conteudo.add(criarPainelEntrada(), BorderLayout.NORTH);
+        conteudo.add(criarTabelaCarrinho(), BorderLayout.CENTER);
+        return conteudo;
+    }
+
+    private JPanel criarPainelEntrada() {
+        JPanel painel = new JPanel(new FlowLayout(FlowLayout.LEFT, 12, 10));
+        painel.setBackground(Color.WHITE);
+        painel.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(220, 226, 236)),
+                new EmptyBorder(12, 12, 12, 12)));
+
+        painel.add(rotulo("Cód. Barras:"));
+        txtCodigo = new JTextField(14);
+        painel.add(txtCodigo);
+
+        painel.add(rotulo("Qtd:"));
         txtQtd = new JTextField("1", 4);
-        painelSuperior.add(txtQtd);
+        painel.add(txtQtd);
 
-        btnAdicionar = new JButton("Inserir Item");
-        painelSuperior.add(btnAdicionar);
-        add(painelSuperior, BorderLayout.NORTH);
+        btnAdicionar = criarBotao("Inserir Item", new Color(29, 78, 216));
+        btnRemover = criarBotao("Remover Item", new Color(180, 83, 9));
+        btnLimpar = criarBotao("Limpar Venda", new Color(107, 114, 128));
 
-        // Painel Central: Tabela contendo a listagem do carrinho
-        String[] colunas = {"Código", "Descrição", "Qtd", "Preço Unit.", "Subtotal"};
-        modeloTabela = new DefaultTableModel(colunas, 0);
-        tabelaCarrinho = new JTable(modeloTabela);
-        add(new JScrollPane(tabelaCarrinho), BorderLayout.CENTER);
+        painel.add(btnAdicionar);
+        painel.add(btnRemover);
+        painel.add(btnLimpar);
 
-        // Painel Inferior: Totais e Finalização da Venda
-        JPanel painelInferior = new JPanel(new BorderLayout(10, 10));
-        JPanel painelAcoes = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 10));
-        
-        lblTotal = new JLabel("TOTAL: R$ 0,00  ");
-        lblTotal.setFont(new Font("Arial", Font.BOLD, 22));
-        lblTotal.setForeground(Color.BLUE);
-        painelInferior.add(lblTotal, BorderLayout.NORTH);
-
-        painelAcoes.add(new JLabel("Pagamento:"));
-        cbPagamento = new JComboBox<>(new String[]{"DINHEIRO", "CARTAO_CREDITO", "CARTAO_DEBITO", "PIX"});
-        painelAcoes.add(cbPagamento);
-
-        btnFecharVenda = new JButton("Finalizar Cupom");
-        btnFecharVenda.setBackground(new Color(34, 139, 34));
-        btnFecharVenda.setForeground(Color.WHITE);
-        painelAcoes.add(btnFecharVenda);
-        painelInferior.add(painelAcoes, BorderLayout.SOUTH);
-        
-        add(painelInferior, BorderLayout.SOUTH);
-
-        // Eventos dos botões
         btnAdicionar.addActionListener(e -> adicionarItemAoCarrinho());
-        btnFecharVenda.addActionListener(e -> finalizarCompraTotal());
+        btnRemover.addActionListener(e -> removerItemSelecionado());
+        btnLimpar.addActionListener(e -> limparVenda());
+
+        return painel;
+    }
+
+    private JScrollPane criarTabelaCarrinho() {
+        String[] colunas = {"Código", "Descrição", "Qtd", "Preço Unit.", "Subtotal"};
+        modeloTabela = new DefaultTableModel(colunas, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+
+        tabelaCarrinho = new JTable(modeloTabela);
+        tabelaCarrinho.setRowHeight(28);
+        tabelaCarrinho.getTableHeader().setReorderingAllowed(false);
+
+        JScrollPane scroll = new JScrollPane(tabelaCarrinho);
+        scroll.setBorder(BorderFactory.createTitledBorder("Itens da Venda"));
+        return scroll;
+    }
+
+    private JPanel criarRodape() {
+        JPanel rodape = new JPanel(new BorderLayout(16, 16));
+        rodape.setOpaque(false);
+
+        lblTotal = new JLabel(formatarMoeda(totalGeral));
+        lblTotal.setFont(new Font("SansSerif", Font.BOLD, 24));
+        lblTotal.setForeground(new Color(17, 94, 89));
+        lblTotal.setBorder(new EmptyBorder(6, 0, 0, 0));
+
+        JPanel acoes = new JPanel(new FlowLayout(FlowLayout.RIGHT, 12, 0));
+        acoes.setOpaque(false);
+
+        cbPagamento = new JComboBox<>(new String[]{"DINHEIRO", "CARTAO_CREDITO", "CARTAO_DEBITO", "PIX"});
+        cbPagamento.setPreferredSize(new Dimension(180, 34));
+
+        btnFecharVenda = criarBotao("Finalizar Venda", new Color(4, 120, 87));
+        btnFecharVenda.setPreferredSize(new Dimension(170, 36));
+        btnFecharVenda.addActionListener(e -> finalizarVenda());
+
+        acoes.add(new JLabel("Pagamento:"));
+        acoes.add(cbPagamento);
+        acoes.add(btnFecharVenda);
+
+        rodape.add(lblTotal, BorderLayout.WEST);
+        rodape.add(acoes, BorderLayout.EAST);
+        return rodape;
+    }
+
+    private JLabel rotulo(String texto) {
+        JLabel label = new JLabel(texto);
+        label.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        return label;
+    }
+
+    private JButton criarBotao(String texto, Color cor) {
+        JButton botao = new JButton(texto);
+        botao.setUI(new javax.swing.plaf.basic.BasicButtonUI());
+        botao.setBackground(cor);
+        botao.setForeground(Color.WHITE);
+        botao.setOpaque(true);
+        botao.setContentAreaFilled(true);
+        botao.setBorderPainted(false);
+        botao.setRolloverEnabled(false);
+        botao.addMouseListener(new java.awt.event.MouseAdapter() {
+            
+            public void mouseEntered(java.awt.event.MouseEvent e) {
+                botao.setBackground(cor);
+                botao.setForeground(Color.WHITE);
+            }
+
+            
+            public void mouseExited(java.awt.event.MouseEvent e) {
+                botao.setBackground(cor);
+                botao.setForeground(Color.WHITE);
+            }
+        });
+        botao.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        botao.setFocusPainted(false);
+        botao.setBorder(BorderFactory.createEmptyBorder(10, 16, 10, 16));
+        return botao;
     }
 
     private void adicionarItemAoCarrinho() {
@@ -102,31 +225,36 @@ public class CaixaView extends JFrame{
             String codigo = txtCodigo.getText().trim();
             int quantidade = Integer.parseInt(txtQtd.getText().trim());
 
-            // 1. Busca os dados do produto no banco pelo controller de Produto
-            ProdutoExibicaoDTO prod = produtoController.pesquisarProdutoCarrinho(codigo);
+            if (codigo.isEmpty()) {
+                throw new IllegalArgumentException("Informe o código do produto.");
+            }
+            if (quantidade <= 0) {
+                throw new IllegalArgumentException("A quantidade deve ser maior que zero.");
+            }
 
-            // 2. Instancia o DTO do carrinho e coloca na lista em memória temporária
-            CarrinhoItemDTO novoItem = new CarrinhoItemDTO(
-                prod.pkProduto(), prod.codigo(), prod.nome(), quantidade, prod.precoUnitario()
-            );
-            carrinho.add(novoItem);
+            ProdutoExibicaoDTO produto = produtoController.pesquisarProdutoCarrinho(codigo);
+            CarrinhoItemDTO item = new CarrinhoItemDTO(
+                    produto.pkProduto(),
+                    produto.codigo(),
+                    produto.nome(),
+                    quantidade,
+                    produto.precoUnitario());
 
-            // 3. Atualiza os componentes Visuais da JTable
+            carrinho.add(item);
             modeloTabela.addRow(new Object[]{
-                novoItem.getCodigo(), novoItem.getNome(), novoItem.getQuantidade(), 
-                String.format("R$ %.2f", novoItem.getPrecoUnitario()), 
-                String.format("R$ %.2f", novoItem.getSubtotal())
+                    item.codigoProduto(),
+                    item.nomeProduto(),
+                    item.quantidade(),
+                    formatarMoeda(item.precoUnitario()),
+                    formatarMoeda(item.subtotal())
             });
 
-            // Reajusta o somatório total da tela
-            valorTotalGeral += novoItem.getSubtotal();
-            lblTotal.setText(String.format("TOTAL: R$ %.2f", valorTotalGeral));
+            totalGeral = totalGeral.add(item.subtotal());
+            atualizarTotal();
 
-            // Limpa os campos para o próximo item
             txtCodigo.setText("");
             txtQtd.setText("1");
             txtCodigo.requestFocus();
-
         } catch (NumberFormatException ex) {
             JOptionPane.showMessageDialog(this, "A quantidade informada deve ser um número inteiro.", "Erro", JOptionPane.WARNING_MESSAGE);
         } catch (Exception ex) {
@@ -134,27 +262,61 @@ public class CaixaView extends JFrame{
         }
     }
 
-    private void finalizarCompraTotal() {
+    private void removerItemSelecionado() {
+        int linha = tabelaCarrinho.getSelectedRow();
+        if (linha < 0) {
+            JOptionPane.showMessageDialog(this, "Selecione um item para remover.", "Atenção", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        CarrinhoItemDTO item = carrinho.remove(linha);
+        modeloTabela.removeRow(linha);
+        totalGeral = totalGeral.subtract(item.subtotal());
+        atualizarTotal();
+    }
+
+    private void limparVenda() {
+        carrinho.clear();
+        modeloTabela.setRowCount(0);
+        totalGeral = BigDecimal.ZERO;
+        atualizarTotal();
+        txtCodigo.setText("");
+        txtQtd.setText("1");
+        txtCodigo.requestFocus();
+    }
+
+    private void finalizarVenda() {
         try {
-            String metodo = cbPagamento.getSelectedItem().toString();
+            if (funcionarioLogado == null || funcionarioLogado.pkFuncionario() == null) {
+                throw new IllegalStateException("Não foi possível identificar o operador do caixa.");
+            }
 
-            // Envia a lista acumulada de múltiplos itens para o controller de vendas processar
-            vendaController.finalizarVenda(carrinho, metodo, idFuncionarioLogado);
+            String metodo = (String) cbPagamento.getSelectedItem();
+            vendaController.finalizarVenda(carrinho, metodo, funcionarioLogado.pkFuncionario());
 
-            JOptionPane.showMessageDialog(this, "Venda registada com sucesso!\nCupom Fiscal Emitido.", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
-            
-            // Limpa o estado da tela para o próximo cliente
-            carrinho.clear();
-            modeloTabela.setRowCount(0);
-            valorTotalGeral = 0.0;
-            lblTotal.setText("TOTAL: R$ 0,00");
-            
+            JOptionPane.showMessageDialog(this, "Venda registrada com sucesso!\nCupom fiscal emitido.", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+            limparVenda();
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this, "Erro ao fechar venda: " + ex.getMessage(), "Erro de Persistência", JOptionPane.ERROR_MESSAGE);
         }
     }
 
+    private void atualizarTotal() {
+        lblTotal.setText("TOTAL: " + formatarMoeda(totalGeral));
+    }
+
+    private String formatarMoeda(BigDecimal valor) {
+        return String.format("R$ %.2f", valor.doubleValue());
+    }
+
+    private String nomeOperador() {
+        if (funcionarioLogado == null) {
+            return "Indisponível";
+        }
+        return funcionarioLogado.nomeCompleto() + " (" + funcionarioLogado.perfil() + ")";
+    }
+
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new CaixaView().setVisible(true));
+        SwingUtilities.invokeLater(() -> new CaixaView(null).setVisible(true));
     }
 }
