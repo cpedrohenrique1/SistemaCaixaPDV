@@ -59,13 +59,6 @@ public class CaixaView extends JFrame {
         setMinimumSize(new Dimension(1100, 720));
         setLocationRelativeTo(null);
         setExtendedState(JFrame.MAXIMIZED_BOTH);
-
-        try {
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (Exception ignored) {
-            // Mantém o tema padrão se o tema do sistema não estiver disponível.
-        }
-
         initComponents();
     }
 

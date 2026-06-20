@@ -49,12 +49,6 @@ public class GerenciarProdutosView extends JFrame {
         setMinimumSize(new Dimension(1120, 760));
         setLocationRelativeTo(null);
         setExtendedState(JFrame.MAXIMIZED_BOTH);
-
-        try {
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (Exception ignored) {
-        }
-
         initComponents();
         carregarProdutos();
     }

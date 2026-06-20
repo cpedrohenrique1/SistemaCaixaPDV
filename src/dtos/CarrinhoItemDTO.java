@@ -5,6 +5,6 @@ import java.util.UUID;
 
 public record CarrinhoItemDTO(UUID pkProduto, String codigoProduto, String nomeProduto, int quantidade, BigDecimal precoUnitario) {
     public BigDecimal subtotal() {
-        return precoUnitario.multiply(BigDecimal.valueOf(quantidade));
+        return precoUnitario.multiply(new BigDecimal(quantidade));
     }
 }

@@ -51,12 +51,6 @@ public class GerenciarUsuariosView extends JFrame {
         setMinimumSize(new Dimension(1120, 760));
         setLocationRelativeTo(null);
         setExtendedState(JFrame.MAXIMIZED_BOTH);
-
-        try {
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (Exception ignored) {
-        }
-
         initComponents();
         carregarUsuarios();
     }
@@ -319,10 +313,6 @@ public class GerenciarUsuariosView extends JFrame {
         txtNomeCompleto.setText(modelo.getValueAt(linha, 1).toString());
         txtNomeUsuario.setText(modelo.getValueAt(linha, 2).toString());
         cbPerfil.setSelectedItem(modelo.getValueAt(linha, 3).toString());
-
-        try {
-        } catch (Exception ex) {
-        }
 
         txtSenha.setText("");
     }

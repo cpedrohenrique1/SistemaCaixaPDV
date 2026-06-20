@@ -16,11 +16,11 @@ public class ProdutoController {
     }
 
     public void registrarProduto(String codigo, String nome, double preco) throws Exception {
-        service.cadastrarNovoProduto(codigo, nome, BigDecimal.valueOf(preco));
+        service.cadastrarNovoProduto(codigo, nome, new BigDecimal(preco));
     }
 
     public void atualizarProduto(UUID pkProduto, String codigo, String nome, double preco) throws Exception {
-        Produto produto = new Produto(pkProduto, codigo, nome, BigDecimal.valueOf(preco));
+        Produto produto = new Produto(pkProduto, codigo, nome, new BigDecimal(preco));
         service.atualizarProduto(produto);
     }
 

@@ -12,6 +12,6 @@ public record ItemVendaDetalheDTO(
         BigDecimal precoUnitario) {
 
     public BigDecimal subtotal() {
-        return precoUnitario.multiply(BigDecimal.valueOf(quantidade));
+        return precoUnitario.multiply(new BigDecimal(quantidade));
     }
 }

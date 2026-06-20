@@ -28,13 +28,6 @@ public class GerenteView extends JFrame {
         setMinimumSize(new Dimension(1100, 700));
         setLocationRelativeTo(null);
         setExtendedState(JFrame.MAXIMIZED_BOTH);
-
-        try {
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (Exception ignored) {
-            // Mantém a aparência padrão se o tema do sistema não estiver disponível.
-        }
-
         initComponents();
     }
 

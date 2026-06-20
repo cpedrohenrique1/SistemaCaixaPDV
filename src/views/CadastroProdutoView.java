@@ -55,7 +55,7 @@ public class CadastroProdutoView extends JDialog{
             controller.registrarProduto(codigo, nome, preco);
             
             JOptionPane.showMessageDialog(this, "Produto cadastrado com sucesso!");
-            this.dispose(); // Fecha o diálogo
+            this.dispose();
             
         } catch (NumberFormatException ex) {
             JOptionPane.showMessageDialog(this, "Por favor, insira um preço válido.", "Erro de Formato", JOptionPane.WARNING_MESSAGE);

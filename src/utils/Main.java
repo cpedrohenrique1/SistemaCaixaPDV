@@ -17,6 +17,7 @@ public class Main {
 			System.out.println("Erro");
 		} else {
 			Statement stmt = conn.createStatement();
+			System.out.println("Criando banco de dados");
 			stmt.executeUpdate("CREATE DATABASE IF NOT EXISTS pdv_supermercado;");
 			stmt.executeUpdate("USE pdv_supermercado;");
 			stmt.executeUpdate(
@@ -28,8 +29,6 @@ public class Main {
 	                "    perfil VARCHAR(20) NOT NULL" +
 	                ");"
 	            );
-
-	            System.out.println("Criando tabela Produtos...");
 	            stmt.executeUpdate(
 	                "CREATE TABLE IF NOT EXISTS Produtos (" +
 	                "    pkProduto VARCHAR(36) DEFAULT(UUID()) PRIMARY KEY," +
@@ -39,7 +38,6 @@ public class Main {
 	                ");"
 	            );
 
-	            System.out.println("Criando tabela Vendas...");
 	            stmt.executeUpdate(
 	                "CREATE TABLE IF NOT EXISTS Vendas (" +
 	                "    pkVenda VARCHAR(36) DEFAULT(UUID()) PRIMARY KEY," +
@@ -51,7 +49,6 @@ public class Main {
 	                ");"
 	            );
 
-	            System.out.println("Criando tabela ItemVenda...");
 	            stmt.executeUpdate(
 	                "CREATE TABLE IF NOT EXISTS ItemVenda (" +
 	                "    pkItemVenda VARCHAR(36) DEFAULT(UUID()) PRIMARY KEY," +
@@ -64,9 +61,7 @@ public class Main {
 	                ");"
 	            );
 
-	            System.out.println("Inserindo usuário administrador padrão...");
-	            // 4. Faz a inserção obrigatória usando IGNORE ou uma verificação para não duplicar o admin se rodar duas vezes
-	            // Senha padrão: '123456' em hash SHA-256
+	            System.out.println("Inserindo dados no banco");
 	            String hashSenhaAdmin = Criptografia.hashSenha("123456");
 	            
 	            String sqlAdmin = "INSERT IGNORE INTO Funcionarios (nomeCompleto, nomeUsuario, senha, perfil) " +
@@ -76,12 +71,11 @@ public class Main {
                         "VALUES ('Caixa', 'caixa', '" + hashSenhaAdmin + "', 'CAIXA');";
 	            stmt.executeUpdate(sqlFuncionario);
 	            System.out.println("Inserindo alguns produtos de teste...");
-	            stmt.executeUpdate("INSERT IGNORE INTO Produtos (codigo, nome, preco) VALUES ('78910001', 'Arroz 5kg', 24.90);");
-	            stmt.executeUpdate("INSERT IGNORE INTO Produtos (codigo, nome, preco) VALUES ('78910002', 'Feijão Carioca 1kg', 7.50);");
+	            stmt.executeUpdate("INSERT IGNORE INTO Produtos (codigo, nome, preco) VALUES ('1', 'Arroz 5kg', 24.90);");
+	            stmt.executeUpdate("INSERT IGNORE INTO Produtos (codigo, nome, preco) VALUES ('2', 'Feijão Carioca 1kg', 7.50);");
+	            stmt.executeUpdate("INSERT IGNORE INTO Produtos (codigo, nome, preco) VALUES ('3', 'Leite 1L', 4.50);");
 
 	            System.out.println("Banco de dados e tabelas inicializados com sucesso!");
-	            
-			System.out.println("Conectado!");
 			SwingUtilities.invokeLater(() -> {
 	            LoginView login = new LoginView();
 	            login.setVisible(true);
